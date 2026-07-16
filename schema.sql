@@ -54,6 +54,12 @@ CREATE TABLE audit_logs (
 CREATE INDEX idx_audit_tenant ON audit_logs(tenant_id);
 CREATE INDEX idx_audit_created ON audit_logs(created_at DESC);
 
--- Protect audit log at database level
--- Replace 'app_user' with the PostgreSQL role your application connects as
-REVOKE DELETE, UPDATE ON audit_logs FROM app_user;
+-- Protect audit log at database level (production only)
+-- In production: create a separate app role (not superuser) and revoke here
+-- In Docker dev setup this is skipped — app_user is the superuser
+DO $$
+BEGIN
+  IF current_user <> 'app_user' THEN
+    REVOKE DELETE, UPDATE ON audit_logs FROM app_user;
+  END IF;
+END $$;

@@ -3,6 +3,7 @@ const request = require('supertest');
 const app     = require('../app');
 const { generateToken } = require('../src/utils/token');
 const { pool } = require('../db');
+const { redisClient } = require('../db/redis');
 
 // Test fixture: two tenants, one project each
 async function seedTestData() {
@@ -47,6 +48,7 @@ describe('Tenant Isolation', () => {
   afterAll(async () => {
     await pool.query(`DELETE FROM tenants WHERE name IN ('Tenant A', 'Tenant B')`);
     await pool.end();
+    await redisClient.quit();
   });
 
   test('Tenant A user cannot read Tenant B project', async () => {
